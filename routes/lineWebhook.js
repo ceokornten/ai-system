@@ -1,13 +1,14 @@
 import express from 'express';
 import { middleware, Client } from '@line/bot-sdk';
 import aiReplyController from '../controllers/aiReply.js';
+import { getSecret } from '../config/secrets.js';
 
 const router = express.Router();
 
 // LINE SDK config
 const lineConfig = {
-  channelSecret: process.env.LINE_CHANNEL_SECRET,
-  channelAccessToken: process.env.LINE_ACCESS_TOKEN,
+  channelSecret: getSecret('LINE_CHANNEL_SECRET'),
+  channelAccessToken: getSecret('LINE_ACCESS_TOKEN'),
 };
 
 // Register LINE middleware (signature validation)

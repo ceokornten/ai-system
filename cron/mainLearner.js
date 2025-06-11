@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import fs from 'fs/promises';
 import path from 'path';
-import mongoose from 'mongoose';
 import { fileURLToPath } from 'url';
-import { Configuration, OpenAIApi } from 'openai';
+import openai, { openaiModel } from '../config/openai.js';
+import connectDB from '../config/database.js';
 
 import Chat from '../models/Chat.js';
 
@@ -16,16 +16,9 @@ import dotenv from 'dotenv';
 // Load environment variables from .env at project root
 dotenv.config();
 
-// Setup OpenAI client
-const configuration = new Configuration({ apiKey: process.env.OPENAI_API_KEY });
-const openai = new OpenAIApi(configuration);
-
 async function main() {
   // Connect to MongoDB
-  await mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
+  await connectDB(process.env.MONGODB_URI);
 
   const promptsDir = path.resolve(__dirname, '../prompts');
   const files = await fs.readdir(promptsDir);
@@ -52,7 +45,7 @@ async function main() {
     // Ask OpenAI to improve the prompt template based on logs
     const improvePrompt = `Improve the following assistant prompt for channel ${channelId} based on recent conversation logs:\n\nCurrent Prompt:\n${template}\n\nLogs:\n${logText}\n\nRevised Prompt:`;
     const response = await openai.createCompletion({
-      model: 'text-davinci-003',
+      model: openaiModel,
       prompt: improvePrompt,
       max_tokens: 512,
       temperature: 0.5,
