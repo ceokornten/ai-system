@@ -6,8 +6,10 @@
 
  ```
  line-ai-agent-system/
- ├── config/
- │   └── .env.example         # Environment variable template
+├── config/
+│   └── .env.example         # Environment variable template
+│   ├── database.js          # MongoDB connection helper
+│   └── openai.js            # OpenAI client setup
  ├── controllers/
  │   └── aiReply.js           # Logic to generate and send AI replies
  ├── cron/

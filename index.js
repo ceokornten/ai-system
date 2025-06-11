@@ -1,6 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import mongoose from 'mongoose';
+import connectDB from './config/database.js';
 
 import lineWebhookRouter from './routes/lineWebhook.js';
 
@@ -14,14 +14,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
-mongoose.connection.on('connected', () => {
-  console.log('MongoDB connected');
-});
-mongoose.connection.on('error', (err) => {
+connectDB(process.env.MONGODB_URI).catch((err) => {
   console.error('MongoDB connection error:', err);
 });
 
