@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import fs from 'fs/promises';
 import path from 'path';
-import mongoose from 'mongoose';
 import { fileURLToPath } from 'url';
-import { Configuration, OpenAIApi } from 'openai';
+import openai from '../config/openai.js';
+import connectDB from '../config/database.js';
 
 import Chat from '../models/Chat.js';
 
@@ -16,16 +16,9 @@ import dotenv from 'dotenv';
 // Load environment variables from .env at project root
 dotenv.config();
 
-// Setup OpenAI client
-const configuration = new Configuration({ apiKey: process.env.OPENAI_API_KEY });
-const openai = new OpenAIApi(configuration);
-
 async function main() {
   // Connect to MongoDB
-  await mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
+  await connectDB(process.env.MONGODB_URI);
 
   const promptsDir = path.resolve(__dirname, '../prompts');
   const files = await fs.readdir(promptsDir);

@@ -1,11 +1,7 @@
-import { Configuration, OpenAIApi } from 'openai';
+import openai from '../config/openai.js';
 
 import Chat from '../models/Chat.js';
 import buildPrompt from '../utils/promptBuilder.js';
-
-// Setup OpenAI client
-const configuration = new Configuration({ apiKey: process.env.OPENAI_API_KEY });
-const openai = new OpenAIApi(configuration);
 
 
 class AiReplyController {
@@ -38,13 +34,19 @@ class AiReplyController {
     const prompt = await buildPrompt(channelId, userText, history);
 
     // Call OpenAI to generate a response
-    const completion = await openai.createCompletion({
-      model: 'text-davinci-003',
-      prompt,
-      max_tokens: 512,
-      temperature: 0.7,
-    });
-    const botReply = completion.data.choices[0].text.trim();
+    let botReply;
+    try {
+      const completion = await openai.createCompletion({
+        model: 'text-davinci-003',
+        prompt,
+        max_tokens: 512,
+        temperature: 0.7,
+      });
+      botReply = completion.data.choices[0].text.trim();
+    } catch (err) {
+      console.error('OpenAI API error:', err);
+      botReply = 'Sorry, something went wrong.';
+    }
 
     // Save AI reply
     await Chat.create({
