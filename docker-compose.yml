@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    command: npm start
+    volumes:
+      - ./:/usr/src/app
+    environment:
+      - MONGODB_URI
+      - OPENAI_API_KEY
+      - LINE_CHANNEL_SECRET
+      - LINE_ACCESS_TOKEN
+      - CRON_SCHEDULE
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:6.0
+    restart: always
+    ports:
+      - "27017:27017"

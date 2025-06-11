@@ -1,0 +1,66 @@
+import { Configuration, OpenAIApi } from 'openai';
+
+import Chat from '../models/Chat.js';
+import buildPrompt from '../utils/promptBuilder.js';
+
+// Setup OpenAI client
+const configuration = new Configuration({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAIApi(configuration);
+
+
+class AiReplyController {
+  // Handle incoming LINE event and respond via provided lineClient
+  async handleEvent(event, lineClient) {
+    if (event.type !== 'message' || event.message.type !== 'text') {
+      return Promise.resolve(null);
+    }
+
+    const userId = event.source.userId;
+    const channelId = event.destination;
+    const userText = event.message.text;
+
+    // Save user message
+    await Chat.create({
+      channelId,
+      userId,
+      role: 'user',
+      message: userText,
+      timestamp: new Date(),
+    });
+
+    // Fetch recent chat history (last 10 messages)
+    const history = await Chat.find({ channelId })
+      .sort({ timestamp: -1 })
+      .limit(10)
+      .lean();
+
+    // Build prompt for this channel
+    const prompt = await buildPrompt(channelId, userText, history);
+
+    // Call OpenAI to generate a response
+    const completion = await openai.createCompletion({
+      model: 'text-davinci-003',
+      prompt,
+      max_tokens: 512,
+      temperature: 0.7,
+    });
+    const botReply = completion.data.choices[0].text.trim();
+
+    // Save AI reply
+    await Chat.create({
+      channelId,
+      userId,
+      role: 'assistant',
+      message: botReply,
+      timestamp: new Date(),
+    });
+
+    // Reply via LINE Messaging API
+    return lineClient.replyMessage(event.replyToken, {
+      type: 'text',
+      text: botReply,
+    });
+  }
+}
+
+export default new AiReplyController();

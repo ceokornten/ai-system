@@ -1,0 +1,18 @@
+{
+  "name": "line-ai-agent-system",
+  "version": "1.0.0",
+  "description": "Multi-agent AI system for LINE OA channels",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "learn": "node cron/mainLearner.js"
+  },
+  "dependencies": {
+    "@line/bot-sdk": "^7.6.0",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "mongoose": "^6.8.0",
+    "openai": "^4.3.1"
+  }
+}
