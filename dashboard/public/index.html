@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Training Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    canvas { max-width: 600px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+  </style>
+</head>
+<body>
+  <h1>AI Training Dashboard</h1>
+  <button id="train">Train Now</button>
+  <p>Latest Training Time: <span id="latest-training">N/A</span></p>
+  <div>
+    <canvas id="pieChart"></canvas>
+  </div>
+  <div>
+    <canvas id="lineChart"></canvas>
+  </div>
+  <table id="chatTable">
+    <thead>
+      <tr><th>Role</th><th>Message</th><th>Time</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+<script>
+async function loadData() {
+  const msgs = await fetch('/api/stats/messages').then(r => r.json());
+  const logs = await fetch('/api/stats/learning').then(r => r.json());
+
+  const userCount = msgs.filter(m => m.role === 'user').length;
+  const assistantCount = msgs.filter(m => m.role === 'assistant').length;
+  const pieCtx = document.getElementById('pieChart').getContext('2d');
+  new Chart(pieCtx, {
+    type: 'pie',
+    data: { labels: ['User', 'Assistant'], datasets: [{ data: [userCount, assistantCount], backgroundColor: ['#36A2EB', '#FF6384'] }] }
+  });
+
+  const countsByDay = {};
+  msgs.forEach(m => {
+    const day = new Date(m.timestamp).toISOString().substring(0,10);
+    countsByDay[day] = (countsByDay[day] || 0) + 1;
+  });
+  const days = Object.keys(countsByDay).sort();
+  const lineCtx = document.getElementById('lineChart').getContext('2d');
+  new Chart(lineCtx, {
+    type: 'line',
+    data: { labels: days, datasets: [{ label: 'Messages', data: days.map(d => countsByDay[d]), fill: false, borderColor: '#36A2EB' }] }
+  });
+
+  const tableBody = document.querySelector('#chatTable tbody');
+  msgs.slice(0,10).forEach(m => {
+    const row = document.createElement('tr');
+    row.innerHTML = `<td>${m.role}</td><td>${m.message}</td><td>${new Date(m.timestamp).toLocaleString()}</td>`;
+    tableBody.appendChild(row);
+  });
+
+  if (logs.length > 0) {
+    document.getElementById('latest-training').textContent = new Date(logs[0].triggeredAt).toLocaleString();
+  }
+}
+
+document.getElementById('train').onclick = async () => {
+  await fetch('/api/train-now', { method: 'POST' });
+  alert('Training started');
+};
+
+loadData();
+</script>
+</body>
+</html>
+
